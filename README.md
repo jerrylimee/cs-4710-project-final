@@ -424,14 +424,47 @@ Must do
 12. Analyze differences between network structures.
 13. Perform additional experiments with alternative discretization strategies.
 
-## **One thing I want to investigate before we implement anything**
+You're very close! We ended up with **14 columns in the processed dataset**, but only **12 are input features**.
 
-There is a potentially important issue with OC-Risk50K that I don't want us to overlook.
+Here's the breakdown:
 
-Your proposal says the dataset was generated using a DAG involving genetics, demographics, latent disease state, symptoms, and biomarkers. But we need to establish exactly which of these variables are actually available in the CSV, and whether the dataset exposes the underlying latent disease state or only its observed diagnosis.
+### **How we got 14 columns**
 
-**Could you download the dataset and upload the CSV here?**
+| Category          | Number | What they are                                                  |
+| ----------------- | ------ | -------------------------------------------------------------- |
+| Input features    | 12     | Variables available at the initial pre-imaging risk assessment |
+| Prediction target | 1      | `Ovarian_Cancer_Status`                                        |
+| Dataset partition | 1      | `Partition` (Train / Validation / Test)                        |
+| **Total**         | **14** |                                                                |
 
-I'd like to inspect its actual schema, identify the target variable, distinguish legitimate early-prediction features from leakage variables, and propose a concrete Bayesian Network structure based on the available columns.
+### **The 12 input features**
 
-That way, our next step won't be writing a hypothetical model. It'll be designing the actual model you're going to submit for CS 4710.
+1. `Age`
+2. `Menopausal_Status`
+3. `Family_History`
+4. `BRCA1_Status`
+5. `BRCA2_Status`
+6. `Lynch_Syndrome_Status`
+7. `BMI`
+8. `Parity`
+9. `Oral_Contraceptive_History`
+10. `Endometriosis_History`
+11. `Hormone_Therapy_History`
+12. `Tubal_Ligation_History`
+
+### **What happened to the other columns?**
+
+There were three particularly important exclusions:
+
+- `Risk_Category`**:** Excluded because it has an extremely strong, potentially target-derived relationship with cancer status. Including it could cause target leakage.
+- `Patient_ID`**:** Excluded because it's just an identifier, not a meaningful predictor.
+- **Post-diagnostic information:** `Treatment_Status`, `Time_To_Progression`, and `Follow_Up_Status` were excluded because they aren't available at the time we want to make predictions.
+
+We also excluded imaging and pathology features because we explicitly decided our model should predict risk **before imaging or diagnostic procedures**.
+
+So the distinction is:
+
+- **14 columns in the processed CSV**
+- **12 actual predictors in the Bayesian Network, plus the outcome node when we construct the complete network.**
+
+That's where the 12 came from!
