@@ -245,3 +245,23 @@ for cpd in model.get_cpds():
 # +---------------------------+--------------------------+--------------------------+
 # | Tubal_Ligation_History(1) | 0.2151380206103166       | 0.07841759628344469      |
 # +---------------------------+--------------------------+--------------------------+
+
+inference = VariableElimination(model)
+evidence = X_test.iloc[0].to_dict()
+prediction = inference.query(variables=["Ovarian_Cancer_Status"], evidence=evidence)
+print("\nExample patient:")
+print(evidence)
+print("\nPredicted probabilities:")
+print(prediction)
+
+y_pred_proba = []
+
+for _, patient in X_test.iterrows():
+    evidence = patient.to_dict()
+    prediction = inference.query(variables=["Ovarian_Cancer_Status"], evidence=evidence, show_progress=False)
+    cancer_probability = prediction.values[1]
+    y_pred_proba.append(cancer_probability)
+
+print("Predictions completed!")
+print("Number of predictions:", len(y_pred_proba))
+print("First 5 probabilities:", y_pred_proba[:5])

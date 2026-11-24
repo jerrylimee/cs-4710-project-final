@@ -468,3 +468,79 @@ So the distinction is:
 - **12 actual predictors in the Bayesian Network, plus the outcome node when we construct the complete network.**
 
 That's where the 12 came from!
+
+---
+
+LOOK AT THAT. We have successfully trained our first Bayesian Network! 🎉
+
+And the CPTs look structurally correct. Let's examine what we've learned before moving forward.
+
+## **1. Sanity check: did parameter estimation work?**
+
+Yes. A few things worth noticing:
+
+- The prior probability of cancer is approximately **49.89%**, matching the training-set distribution.
+- Every feature has a conditional probability distribution for both cancer outcomes.
+- The probabilities within each outcome column sum to approximately 1.
+- We used Bayesian smoothing, so even rare categories have nonzero probabilities.
+
+For example, look at Age:
+
+| Age category | No cancer | Cancer |
+| ------------ | --------- | ------ |
+| Young        | 35.55%    | 14.76% |
+| Middle       | 25.06%    | 24.72% |
+| Older        | 20.61%    | 29.58% |
+| Elderly      | 18.78%    | 30.94% |
+
+The model has learned that elderly patients are more prevalent in the cancer group in this synthetic dataset.
+
+## **2. Some interesting observations**
+
+A few features show noticeable differences between the two outcome groups:
+
+| Feature                    | Observation                                           |
+| -------------------------- | ----------------------------------------------------- |
+| BRCA1                      | Positive status is more prevalent in the cancer group |
+| BRCA2                      | Positive status is more prevalent in the cancer group |
+| Family history             | More prevalent in the cancer group                    |
+| Oral contraceptive history | More prevalent in the non-cancer group                |
+| Tubal ligation history     | More prevalent in the non-cancer group                |
+| BMI                        | Almost identical distributions                        |
+| Parity                     | Almost identical distributions                        |
+
+These are associations in our synthetic benchmark, not evidence of real-world clinical effects.
+
+## **3. One important limitation**
+
+Our current network assumes:
+
+\\[ X_i \perp X_j \mid Y \\]
+
+In other words, given the cancer outcome, every feature is assumed conditionally independent of every other feature.
+
+For example, it assumes that Age and Menopausal Status are conditionally independent given cancer status.
+
+That is a simplifying assumption of Naïve Bayes. It may not accurately represent real relationships between clinical variables.
+
+This is precisely why we'll eventually compare it with a data-driven Bayesian Network.
+
+## **4. Next step: make predictions!**
+
+Now comes the fun part. We'll use **Variable Elimination** to calculate the probability of cancer for each patient based on their observed features.
+
+Add this after your CPT estimation code:
+
+```
+# Perform inference using Variable Eliminationinference = VariableElimination(model)# Example: predict for the first patient in the test setevidence = X_test.iloc[0].to_dict()prediction = inference.query(    variables=["Ovarian_Cancer_Status"],    evidence=evidence)print("\nExample patient:")print(evidence)print("\nPredicted probabilities:")print(prediction)
+```
+
+This will calculate:
+
+\\[ P(Y \mid X_1, X_2, \ldots, X\_{12}) \\]
+
+for one test-set patient.
+
+**Why the test set?** Because we want to evaluate how well our model generalizes to previously unseen observations.
+
+Run this and show me the output. Then we'll turn it into predictions for the entire test set and calculate AUROC, precision-recall, and Brier score—the evaluation metrics your professor requested.
